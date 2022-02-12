@@ -12,8 +12,8 @@ namespace cpptex {
 
 class PgfplotPrinter : public TikzPrinter {
 public:
-    PgfplotPrinter(std::string directory, std::string filename, std::string documentType = "standalone")
-            : TikzPrinter(directory,filename,documentType){
+    PgfplotPrinter(std::string path, std::string documentType = "standalone")
+            : TikzPrinter(path,documentType){
         m_body = Body{getTikzHeader("scale=0.55"),
                       "",
                       getTikzFooter() };

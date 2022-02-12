@@ -25,6 +25,15 @@ std::string removeSpaces(std::string str) {
     return removeCharsFromString(str,&space);
 }
 
+std::pair<std::string,std::string>
+splitDirectoriesFromFilename(std::string path) {
+    auto pos = path.rfind('/');
+    return pos == std::string::npos ? // Just a file name
+        std::make_pair("./", path)
+        : std::make_pair(path.substr(0, pos+1),
+                         path.substr(pos+1, std::string::npos));
+}
+
 
 struct SetPrecision {
     int value;

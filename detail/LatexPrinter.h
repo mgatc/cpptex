@@ -15,15 +15,22 @@
 
 namespace cpptex {
 
+/**
+ * The base printer class. Provides a good outer shell of a document and basic functionality
+ * applicable to all Latex documents, such as writing the .tex file, adding other printers as
+ * subdocuments or figures, compilation, and display.
+ */
 class LatexPrinter {
 public:
     typedef std::pair<std::string,std::string> Option;
     typedef std::vector<Option> OptionsList;
 
-    std::string m_directory = "";
 
-    explicit LatexPrinter(std::string directory, std::string filename, std::string documentType = "article")
-        : m_directory(directory), m_filename(std::move(filename)), m_documentType(std::move(documentType)) {}
+    explicit LatexPrinter(std::string path, std::string documentType = "article")
+        : m_documentType(std::move(documentType))
+    {
+        std::tie(m_directory, m_filename) = splitDirectoriesFromFilename(path);
+    }
 
     // Document-level getters
     std::string getName() const {
@@ -91,7 +98,7 @@ public:
     }
     void setCaption(const std::string& caption ) {
         m_caption = caption;
-        addLatexComment(caption);
+        addComment(caption);
     }
     template<class T>
     void setCaption(const T& setter) {
@@ -165,8 +172,12 @@ public:
     void clearpage() {
         addRawText("\\clearpage\n\n");
     }
-    void addLatexComment( const std::string& comment ) {
-        addRawText("% " + comment + "\n");
+    void addComment(const std::string& comment ) {
+        std::stringstream str(comment);
+        std::string line;
+        while(std::getline(str, line)) {
+            addRawText("% " + line + "\n");
+        }
     }
 
     void save() const {
@@ -191,20 +202,22 @@ public:
         fclose(fileOut);
         std::cout<<"done."<<std::endl;
     }
+    std::string m_compiler = "pdflatex";
     void compile() const {
         save();
 
         std::cout<<"Compiling "<< getTexFilename()<<"..."<<std::flush;
-        std::string command = "pdflatex -output-directory=" + m_directory
+        std::string command = m_compiler + " -output-directory=" + m_directory
                         + " " + m_directory + getTexFilename() + " > /dev/null";
         std::ignore = system(command.c_str());
         std::cout<<"done."<<std::endl;
     }
+    std::string m_viewer = "evince";
     void display() const {
         compile();
 
         std::cout<<"Opening "<<getPdfFilename()<<" for viewing."<<std::endl;
-        std::string command = "evince " + m_directory + getPdfFilename() + " &";
+        std::string command = m_viewer + " " + m_directory + getPdfFilename() + " &";
         std::ignore = system(command.c_str());
         std::ignore = system(command.c_str());
     }
@@ -221,6 +234,7 @@ protected:
         std::string footer;
     };
     Body m_body;
+    std::string m_directory;
     std::string m_filename;
     std::string m_documentType;
     std::string m_caption;

@@ -22,8 +22,8 @@ public:
     std::string backgroundColor =     "FEFEF6";
     std::string textColor =           "111116";
     double vertexRadius = 0.05;
-    double activeEdgeWidth =0.6;
-    double inactiveEdgeWidth = 0.4;
+    double activeEdgeWidth =0.2;
+    double inactiveEdgeWidth = 0.1;
 
 
     OptionsList activeEdgeOptions = { // active edge options
@@ -69,8 +69,9 @@ public:
             {"line width", std::to_string(inactiveEdgeWidth)}, // additional border width
     };
 
-    explicit GraphPrinter(std::string directory, std::string filename, std::string documentType = "standalone")
-            : TikzPrinter(directory,filename,documentType){
+    template< class InputIterator>
+    explicit GraphPrinter(std::string path, InputIterator pointsBegin, InputIterator pointsEnd, double sizeInCm = 10.0, std::string documentType = "standalone")
+            : TikzPrinter(path, documentType) {
 
         // setup graph environment
         std::string tikzOptions = getTikzOptions();
@@ -90,7 +91,10 @@ public:
         defineColor(activeVertexColor);
         defineColor(inactiveVertexColor);
         defineColor(backgroundColor);
+
+        autoscale(pointsBegin, pointsEnd, sizeInCm);
     }
+
     std::string getTikzOptions() {
         return std::string("vertex/.style = {circle,fill, minimum size=")
                + std::to_string(vertexRadius)

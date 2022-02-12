@@ -25,8 +25,8 @@ public:
         MaxInRow
     };
 
-    TablePrinter(std::string directory, std::string filename, std::string documentType = "standalone")
-    : LatexPrinter(directory,filename,documentType){
+    TablePrinter(std::string path, std::string documentType = "standalone")
+    : LatexPrinter(path,documentType){
         defineColor(TABLE_COLOR_1);
         defineColor(TABLE_COLOR_2);
     }
