@@ -12,6 +12,8 @@ namespace cpptex {
 
 class PgfplotPrinter : public TikzPrinter {
 public:
+    typedef std::vector<std::vector<std::pair<double,double>>> ResultMatrix;
+
     PgfplotPrinter(std::string path, std::string documentType = "standalone")
             : TikzPrinter(path,documentType){
         m_body = Body{getTikzHeader("scale=0.55"),
@@ -59,6 +61,42 @@ public:
         allPlotsOfAxis += getAxisFooter(m_filename);
         m_body.content = allPlotsOfAxis;
     }
+
+    void plotAxis(const ResultMatrix& results, const std::vector<std::string>& seriesLabels = {}, std::string xLabel = "", std::string yLabel = "", std::string title = "") {
+
+        if(m_algorithmMarkers.empty())
+            for(const auto& seriesName : seriesLabels) // provides the ordering we want
+                addNewMarker(seriesName);
+
+
+        // build axis header
+        std::string allPlotsOfAxis = getAxisHeader(results, xLabel, yLabel, title);
+
+        // build the plot
+        for(unsigned i=0; i<results.size(); ++i ) {
+//            if( results.find(name) != results.end() ) {//spanner::contains(results,name) ) {
+//                const auto &spanner = results.at(name);
+                std::string ivPlot = getPlotHeader(seriesLabels.size()>i ? seriesLabels[i] : "");//
+                for (const auto &level: results[i]) {
+                    auto xValue = std::to_string(level.first);
+                    auto yValue = std::to_string(level.second);
+                    ivPlot += "("
+                               + xValue
+                               + ","
+                               + yValue
+                               + ")\n";
+//                    ivPlot += entry;
+                }
+                ivPlot += getPlotFooter();
+//                if (isFirst) {
+//                    ivPlot += getLegendEntry(name);
+//                }
+                allPlotsOfAxis += ivPlot;
+//            }
+        }
+        allPlotsOfAxis += getAxisFooter(m_filename);
+        m_body.content = allPlotsOfAxis;
+    }
     std::string getLegend() {
         std::string refOpener("\\ref{");
         std::string refText = cpptex::removeSpaces(m_caption) + "-legend";
@@ -72,22 +110,101 @@ public:
                              + "}}";
         return legendEntry;
     }
-    std::string getPlotHeader(const std::string& algorithm) {
+    std::string getPlotHeader(const std::string& label) {
         std::string plotHeader = "\n\n\\addplot[";
 
         auto color = getColor();
 
         plotHeader += std::string("solid,")
-                    + getMarkerText(algorithm);
+                    + getMarkerText(label);
 
         plotHeader += "]";
         plotHeader += " coordinates {\n";
         return plotHeader;
     }
+
     std::string getPlotFooter() {
         std::string plotFooter("}node [pos=1.15, above left] {};\n\n");
         return plotFooter;
     }
+
+    std::vector<double> getXTicks(const ResultMatrix& results, unsigned numTicks = 5) {
+        if(numTicks == 0) return {};
+
+        double minX = std::numeric_limits<double>::infinity();
+        double maxX = -std::numeric_limits<double>::infinity();
+
+        for(auto series : results) {
+            for(auto xyResultPair : series) {
+                auto val = xyResultPair.first;
+                minX = std::min(minX, val);
+                maxX = std::max(maxX, val);
+            }
+        }
+
+        double diff = maxX - minX;
+        double step = diff / (numTicks-1);
+        double currentTick = minX;
+
+        std::vector<double> ticks;
+        ticks.reserve(numTicks);
+
+        for(unsigned i=0; i<numTicks; ++i) {
+            ticks.push_back(static_cast<unsigned>(currentTick));
+            currentTick += step;
+        }
+
+        return ticks;
+    }
+
+    std::string getAxisHeader(const ResultMatrix& results,
+                              std::string xLabel = "", std::string yLabel = "", std::string title = "") {
+
+        std::stringstream axisHeader;
+        axisHeader << "\\begin{axis}[";
+
+        if(!title.empty())
+            axisHeader << "title={" << m_caption << "},";
+
+//        std::string legendText = "legend to name=" + cpptex::removeSpaces(m_caption)
+//                                 + "-legend, legend columns={3}, ";
+
+        axisHeader << "yticklabel style={rotate=90,anchor=base,yshift=0.2cm}, ";
+        axisHeader << std::string("scaled ticks=false,grid=none,");
+
+        if(!xLabel.empty())
+            axisHeader << "xlabel={" + xLabel + "},";
+
+
+        std::string xTicks;
+        auto xTicksVec = getXTicks(results,0);
+        double step = xTicksVec.size() > 1 ? xTicksVec[1] - xTicksVec[0] : 0.0;
+
+        if(!xTicksVec.empty()) {
+            axisHeader << "xtick={";
+
+            for( auto val : xTicksVec)
+                xTicks += std::to_string(val) + ",";
+
+            xTicks = xTicks.substr( 0, xTicks.size()-1 );
+            axisHeader << xTicks << "}, ";
+            + "xmin="
+            + std::to_string(xTicksVec.front() - step/2)
+            + ",xmax="
+            + std::to_string(xTicksVec.back() + step/2);
+        }
+
+        axisHeader << "ylabel near ticks,";
+
+        if(!yLabel.empty())
+            axisHeader << "ylabel={" + yLabel + "},";
+
+        axisHeader << std::string("legend pos=north west,");
+
+        axisHeader << "]"; // close axis environment attributes
+        return axisHeader.str();
+    }
+
     template<class ResultMap>
     std::string getAxisHeader(const std::string& iv, const ResultMap& results, const double xScale = 1.0,
                          const std::string xScaleUnit = "", bool first = true) {
@@ -136,6 +253,7 @@ public:
         axisHeader += "]"; // close axis environment attributes
         return axisHeader;
     }
+
     std::string getAxisFooter(const std::string& plotLabel = "") {
         std::string axisFooter("\n\n\\end{axis}\n\n");
         axisFooter += "\\label{plots:"
@@ -143,6 +261,7 @@ public:
                       + "}";
         return axisFooter;
     }
+
 private:
     static std::vector<std::string> MarkStyles;
     static std::vector<std::string> Marks;
