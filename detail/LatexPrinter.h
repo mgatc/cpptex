@@ -11,7 +11,7 @@
 #include <utility>
 #include <vector>
 
-#include "./cpptex/detail/util.h"
+#include "util.h"
 
 namespace cpptex {
 

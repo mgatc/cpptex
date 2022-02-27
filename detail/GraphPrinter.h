@@ -6,8 +6,8 @@
 #include <string>
 #include <utility> // pair
 
-#include "./cpptex/detail/TikzPrinter.h"
-#include "./cpptex/detail/util.h"
+#include "TikzPrinter.h"
+#include "util.h"
 
 namespace cpptex {
 
