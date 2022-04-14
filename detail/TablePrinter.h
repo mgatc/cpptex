@@ -142,7 +142,7 @@ protected:
 std::map<std::string,std::string> TablePrinter::m_ivNiceNames = {
         {"runtime",             "$\\mathrm{runtime (s)}$"},
         {"degree",              "$\\Delta$"},
-        {"avgDegreePerPoint",           "$\\Delta_\\mathrm{avg}$"},
+        {"degreeAvg",           "$\\Delta_\\mathrm{avg}$"},
         {"avgDegreePerPoint",   "$\\Delta_\\mathrm{point}$"},
         {"maxStretchFactor",    "$t_\\mathrm{max}$"},
         {"avgStretchFactor",    "$t_\\mathrm{avg}$"},
