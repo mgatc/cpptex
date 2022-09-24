@@ -69,20 +69,20 @@ public:
             });
         }
         for(size_t row=0; row<numRows; ++row) {
-            std::optional<std::string> highlightValue;
+            std::string highlightValue;
             if(highlightStyle==CellHighlightStyle::MaxInRow) {
                 // first column has n levels, skip
-                highlightValue = std::make_optional(min_element(next(m_added.begin()),m_added.end(),
+                highlightValue = min_element(next(m_added.begin()),m_added.end(),
               [row](auto &column1, auto &column2){
                         return stod(column1.second.second.at(row)) < stod(column2.second.second.at(row));
-                    })->second.second.at(row));
+                    })->second.second.at(row);
             }
             int columnNum = -1; // 0 is the first index of the column highlight-data but we want to skip the first col (names)
             for(const auto& cell : m_added ) { //auto attr : colHeaders )
                 std::string cellValue = cell.second.second.at(row);
                 std::string prefix = "$";
                 std::string suffix = "$ &";
-                if( (highlightValue && *highlightValue == cellValue )
+                if( highlightValue == cellValue
                   ||(!highlightCols.empty() && highlightCols[columnNum] == cellValue )) {
                     prefix += "\\textbf{";
                     suffix = "}" + suffix;
